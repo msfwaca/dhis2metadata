@@ -1,0 +1,58 @@
+{
+  "name": "metadatapp",
+  "version": "0.1.0",
+  "description": "A metadata dictionary is an application in DHIS2 that shows data about metadata and what it entails, such information as descriptions of the metadata thus allowing users to view and edit them in real time so as to assist users using DHIS2 in whatever instance.",
+  "private": true,
+  "dependencies": {
+    "axios": "^0.18.0",
+    "history": "^1.13.1",
+    "react": "^16.5.2",
+    "react-bootstrap": "^0.32.4",
+    "react-detect-offline": "^2.1.2",
+    "react-dom": "^16.5.2",
+    "react-js-pagination": "^3.0.2",
+    "react-overlays": "^0.8.3",
+    "react-redux": "^5.0.7",
+    "react-router": "^4.3.1",
+    "react-router-dom": "^4.3.1",
+    "react-scripts": "1.1.5",
+    "redux": "^4.0.0",
+    "redux-logger": "^3.0.6",
+    "redux-promise-middleware": "^5.1.1",
+    "redux-thunk": "^2.3.0",
+    "sphinx": "^0.1.2",
+    "sphynx": "^2.0.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build && d2-manifest package.json build/manifest.webapp",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "manifest.webapp": {
+    "name": "Metadata Dictionary",
+    "icons": {
+      "48": "./icon-48-48.png",
+      "72": "./icon-72-72.png",
+      "96": "./icon-96-96.png",
+      "128": "./icon-128-128.png",
+      "144": "./icon-144-144.png",
+      "192": "./icon-192-192.png",
+      "256": "./icon-256-256.png",
+      "512": "./icon-512-512.png"
+    },
+    "developer": {
+      "name": "HIS WaCA",
+      "email": "msfw-epi-data-gis@waca.msf.org"
+    },
+    "activities": {
+      "dhis": {
+        "href": "/"
+      }
+    },
+    "launch_url": "/",
+    "default_locale": "en"
+  },
+
+  "proxy": "https://tarcker-dev.msf-waca.org/dhis"
+}
