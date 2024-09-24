@@ -146,7 +146,7 @@ class LetterResults extends Component {
                     valueType: this.state.valueType,
                     shortName: this.state.shortName
                 });
-                headerPlace = "dataElements/";
+                headerPlace = "/dataElements/";
 
                 break;
             case "prog":
@@ -183,6 +183,12 @@ class LetterResults extends Component {
                 placeholder = undefined;
                 headerPlace = undefined;
         }
+        console.log('Request URL:', config.url + headerPlace + this.state.id);
+        console.log('Request Body:', placeholder);
+        console.log('Headers:', {
+        "Content-type": "application/json; charset=UTF-8",
+        'Authorization': `Basic ${btoa(config.username + ":" + config.password)}`
+        });
         fetch(config.url + headerPlace + this.state.id, {
             method: 'PUT',
             body: placeholder,
