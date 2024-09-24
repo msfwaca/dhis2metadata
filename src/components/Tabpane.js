@@ -183,7 +183,7 @@ class Tabpane extends Component {
     }
     dispUrl(name = 'dataSets'){
         this.setState({
-            current_url: 'https://tarcker-dev.msf-waca.org/dhis/api/'+ name
+            current_url: 'https://tarcker-dev.msf-waca.org/dhis/api/dataSets.json?fields=:all?&paging=false'+ name
         })
         console.log(this.state.current_url)
     }
@@ -213,7 +213,20 @@ class Tabpane extends Component {
             });
         }
         else if (itemCalled === "indicators") {
-            fetch(`https://tarcker-dev.msf-waca.org/dhis/api/indicatorGroups.json?fields=:all?&paging=false`, headers)
+            fetch(`https://tarcker-dev.msf-waca.org/dhis/api/indicators.json?fields=:all?&paging=false`, headers)
+                .then(response => {
+                    return response.json();
+                }).then(findresponse => {
+                /* console.log(findresponse.dataElementGroups);*/
+                this.setState({
+                    data: findresponse.indicatorGroups, selectedGroup: "Filter"
+                })
+            }).catch(error => {
+                console.log(error);
+            });
+        }
+        else if (itemCalled === "programs") {
+            fetch(`https://tarcker-dev.msf-waca.org/dhis/api/programs.json?fields=:all?&paging=false`, headers)
                 .then(response => {
                     return response.json();
                 }).then(findresponse => {
