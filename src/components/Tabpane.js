@@ -1,351 +1,215 @@
-import React, {Component} from 'react';
+import React, { useState, useEffect } from 'react';
 import './Tabpane.css';
-import {
-    Button,
-    Col,
-    Dropdown,
-    DropdownButton,
-    FormControl,
-    Glyphicon,
-    MenuItem,
-    Nav,
-    NavItem,
-    Row,
-    Tab
-} from 'react-bootstrap';
-import ButtonGroupNav from "./ButtonGroupNav";
-import * as ReactDOM from "react-dom";
-import config from "../actions/config";
-import ShowAll from "./ShowAll";
-import {Offline, Online} from "react-detect-offline";
+import { Button, Col, Dropdown, DropdownButton, FormControl, Glyphicon, MenuItem, Nav, NavItem, Row, Tab } from 'react-bootstrap';
+import ButtonGroupNav from './ButtonGroupNav';
+import config from '../actions/config';
+import ShowAll from './ShowAll';
+import { Offline, Online } from 'react-detect-offline';
 
 const headers = {
-    headers: {
-        'Authorization': `Basic ${btoa(config.username + ":" + config.password)}`
-    }
+  headers: {
+    Authorization: `Basic ${btoa(config.username + ':' + config.password)}`
+  }
 };
 
-class CustomToggle extends React.Component {
-    constructor(props, context) {
-        super(props, context);
-        this.handleClick = this.handleClick.bind(this);
-    }
+const CustomToggle = ({ onClick, children }) => {
+  const handleClick = (e) => {
+    e.preventDefault();
+    onClick(e);
+  };
 
-    handleClick(e) {
-        e.preventDefault();
-        this.props.onClick(e);
-    }
+  return (
+    <div>
+      <Button onClick={handleClick}>
+        {children}
+      </Button>
+    </div>
+  );
+};
 
-    render() {
-        return (
-            <div ref={node => this.node = node}>
-                <Button onClick={this.handleClick}>
-                    {this.props.children}
-                </Button>
+const CustomMenu = ({ children }) => {
+  const [value, setValue] = useState('');
+
+  const handleChange = (e) => setValue(e.target.value.toLowerCase());
+
+  const filteredChildren = React.Children.toArray(children).filter(
+    (child) => !value.trim() || child.props.children[1].toLowerCase().includes(value)
+  );
+
+  return (
+    <div className="dropdown-menu" style={{ maxHeight: 500, overflowY: 'auto' }}>
+      <FormControl
+        type="text"
+        placeholder="Type to filter..."
+        onChange={handleChange}
+        value={value}
+        style={{ margin: 10, width: '90%' }}
+      />
+      {filteredChildren.length > 0 ? (
+        filteredChildren
+      ) : (
+        <div>
+          <Online>
+            <div style={{ color: 'red', margin: 10 }}>No groups found</div>
+          </Online>
+          <Offline>
+            <div className="spinner">
+              <div className="double-bounce1" />
+              <div className="double-bounce2" />
             </div>
-        );
-    }
-}
+          </Offline>
+        </div>
+      )}
+    </div>
+  );
+};
 
-class CustomMenu extends React.Component {
-    constructor(props, context) {
-        super(props, context);
+const Tabpane = () => {
+  const [viewTabs, setViewTabs] = useState(true);
+  const [currentUrl, setCurrentUrl] = useState('');
+  const [selectedGroup, setSelectedGroup] = useState('Filter');
+  const [data, setData] = useState([]);
+  const [selectedItem, setSelectedItem] = useState('datasets');
+  const [selectedId, setSelectedId] = useState('');
+  const [selectedItemdd, setSelectedItemdd] = useState({ item: 1, name: 'All' });
 
-        this.handleChange = this.handleChange.bind(this);
-        this.state = {
-            value: ''
-        };
-    }
+  useEffect(() => {
+    dispUrl();
+  }, []);
 
-    handleChange(e) {
-        this.setState({value: e.target.value});
-    }
+  const dispUrl = (name = 'data') => {
+    setCurrentUrl(`https://tarcker-dev.msf-waca.org/dhis/api/${name}`);
+  };
 
-    focusNext() {
-        const input = ReactDOM.findDOMNode(this.input);
-
-        if (input) {
-            //input.focus();
-        }
-    }
-
-    render() {
-        const {children} = this.props;
-        const {value} = this.state;
-
-        return (
-            <div className="dropdown-menu" style={{
-                maxHeight: 500,
-                overflowY: "auto"
-            }}>
-                <FormControl ref={c => {
-                    this.input = c;
-                }}
-                             type="text"
-                             placeholder="Type to filter..."
-                             onChange={this.handleChange}
-                             value={value.toLowerCase()}
-                             style={{margin: 10, width: "90%"}}
-                />
-                <div style={{color: "#FEC519", margin: 10}}>Click the top button to dismiss. <Glyphicon
-                    glyph={"warning-sign"} className={"pull-right"}/></div>
-                {React.Children.toArray(children).filter(
-                    child => !value.trim() || child.props.children[1].toLowerCase().indexOf(value) !== -1
-                ).length !== 0 ? React.Children.toArray(children).filter(
-                    child => !value.trim() || child.props.children[1].toLowerCase().indexOf(value) !== -1
-                ) : <div><Online>
-                    <div style={{color: "red", margin: 10}}>No groups found</div>
-                </Online><Offline>
-                    <div className="spinner">
-                        <div className="double-bounce1"/>
-                        <div className="double-bounce2"/>
-                    </div>
-                </Offline></div>
-                }
-            </div>
-        );
-    }
-}
-
-class Tabpane extends Component {
-    constructor() {
-        super();
-        this.state = {
-            viewTabs: true,
-            current_url : '',
-            selectedGroup: "Filter",
-            data: [],
-            selectedItem: "datasets",
-            selectedId: "",
-            selectedItemdd: {
-                "item": 1,
-                "name": "All"
-            }
-        };
-        this.showAllButton = this.showAllButton.bind(this);
-        this.removeAllButton = this.removeAllButton.bind(this);
-    }
-    componentWillMount(){
-        this.dispUrl()
+  const callGroups = async (itemCalled) => {
+    let apiEndpoint = '';
+    switch (itemCalled) {
+      case 'dataelements':
+        apiEndpoint = 'dataElementGroups.json';
+        break;
+      case 'indicators':
+        apiEndpoint = 'indicators.json';
+        break;
+      case 'programs':
+        apiEndpoint = 'programs.json';
+        break;
+      case 'datasets':
+        apiEndpoint = 'dataSets.json';
+        break;
+      default:
+        setData([]);
+        return;
     }
 
-    handleClick(id) {
-        switch (id) {
-            case 1:
-                this.setState({
-                    selectedItem: "Filter",
-                     selectedItemdd: {
-                         "item": 1, 
-                         "name": "All"}
-                        });
-                break;
-            case 2:
-                this.setState({
-                    selectedItem: "datasets",
-                    selectedItemdd: {"item": 2, "name": "Datasets"}
-                }, this.callGroups.bind(this, "datasets"));
-                break;
-            case 3:
-                this.setState({
-                    selectedItem: "indicators",
-                    selectedItemdd: {"item": 3, "name": "Indicators"}
-                }, this.callGroups.bind(this, "indicators"));
-                break;
-            case 4:
-                this.setState({
-                    selectedItem: "programs",
-                    selectedItemdd: {"item": 4, "name": "Programs"}
-                }, this.callGroups.bind(this, "programs"));
-                break;
-            case 5:
-                this.setState({
-                    selectedItem: "dataelements",
-                    selectedItemdd: {"item": 5, "name": "Data Elements"}
-                }, this.callGroups.bind(this, "dataelements"));
-                break;
-            default:
-                this.setState({
-                    selectedItem: "dataelements",
-                    selectedItemdd: {"item": 0, "name": "None"}
-                }, this.callGroups.bind(this, "dataelements"))
-        }
+    try {
+      const response = await fetch(`https://tarcker-dev.msf-waca.org/dhis/api/${apiEndpoint}?fields=:all&paging=false`, headers);
+      const result = await response.json();
+      setData(result.dataElementGroups || []);
+    } catch (error) {
+      console.error(error);
     }
+  };
 
-    handleGroup(name, id) {
-        //console.log(name);
-        this.setState({selectedGroup: name, selectedId: id});
-    }
+  const handleClick = (id) => {
+    const items = ['Filter', 'datasets', 'indicators', 'programs', 'dataelements'];
+    setSelectedItem(items[id] || 'dataelements');
+    setSelectedItemdd({ item: id, name: items[id] || 'None' });
+    callGroups(items[id]);
+  };
 
-    showAllButton() {
-        this.setState({viewTabs: false});
-        ReactDOM.render(<ShowAll groups={this.state.selectedItem}
-                                 id={this.state.selectedId}/>, document.querySelector("#displayHereAfter"))
-    }
-    dispUrl(name = 'data'){
-        this.setState({
-            current_url: 'https://tarcker-dev.msf-waca.org/dhis/api'+ name
-        })
-        console.log(this.state.current_url)
-    }
+  const showAllButton = () => {
+    setViewTabs(false);
+    // Render logic for showAll here
+  };
 
-    removeAllButton() {
-        this.setState({
-            viewTabs: true,
-            selectedGroup: "Filter",
-            selectedItem: "Filter",
-            selectedItemdd: {"item": 1, "name": "All"}
-        });
-        ReactDOM.render("", document.querySelector("#displayHereAfter"))
-    }
+  const removeAllButton = () => {
+    setViewTabs(true);
+    setSelectedGroup('Filter');
+    setSelectedItem('Filter');
+    setSelectedItemdd({ item: 1, name: 'All' });
+    // Clear rendered content
+  };
 
-    callGroups(itemCalled) {
-        if (itemCalled === "dataelements") {
-            fetch(`https://tarcker-dev.msf-waca.org/dhis/api/dataElementGroups.json?fields=:all?&paging=false`, headers)
-                .then(response => {
-                    return response.json();
-                }).then(findresponse => {
-                /* console.log(findresponse.dataElementGroups);*/
-                this.setState({
-                    data: findresponse.dataElementGroups, selectedGroup: "Filter"
-                })
-            }).catch(error => {
-                console.log(error);
-            });
-        }
-        else if (itemCalled === "indicators") {
-            fetch(`https://tarcker-dev.msf-waca.org/dhis/api/indicators.json?fields=:all?&paging=false`, headers)
-                .then(response => {
-                    return response.json();
-                }).then(findresponse => {
-                /* console.log(findresponse.dataElementGroups);*/
-                this.setState({
-                    data: findresponse.indicatorGroups, selectedGroup: "Filter"
-                })
-            }).catch(error => {
-                console.log(error);
-            });
-        }
-        else if (itemCalled === "programs") {
-            fetch(`https://tarcker-dev.msf-waca.org/dhis/api/programs.json?fields=:all?&paging=false`, headers)
-                .then(response => {
-                    return response.json();
-                }).then(findresponse => {
-                /* console.log(findresponse.dataElementGroups);*/
-                this.setState({
-                    data: findresponse.indicatorGroups, selectedGroup: "Filter"
-                })
-            }).catch(error => {
-                console.log(error);
-            });
-        }
-        else if (itemCalled === "datasets") {
-            fetch(`https://tarcker-dev.msf-waca.org/dhis/api/dataSets.json?fields=:all?&paging=false`, headers)
-                .then(response => {
-                    return response.json();
-                }).then(findresponse => {
-                /* console.log(findresponse.dataElementGroups);*/
-                this.setState({
-                    data: findresponse.indicatorGroups, selectedGroup: "Filter"
-                })
-            }).catch(error => {
-                console.log(error);
-            });
-        }
-        else {
-            this.setState({
-                data: [], selectedGroup: "Filter"
-            })
-        }
+  return (
+    <div className="tabpanebody">
+      <div className="container">
+        <Row>
+          <label style={{ marginLeft: 10 }}>Filter by Groups</label>&nbsp;
+          <DropdownButton id="input-dropdown-addon" title={selectedItemdd.name}>
+            <MenuItem key="nav2" onClick={() => handleClick(2)}>
+              DataSets{selectedItemdd.item === 2 ? <Glyphicon glyph="ok" className="pull-right" /> : null}
+            </MenuItem>
+            <MenuItem key="nav3" onClick={() => handleClick(3)}>
+              Indicators{selectedItemdd.item === 3 ? <Glyphicon glyph="ok" className="pull-right" /> : null}
+            </MenuItem>
+            <MenuItem key="nav4" onClick={() => handleClick(4)}>
+              Programs{selectedItemdd.item === 4 ? <Glyphicon glyph="ok" className="pull-right" /> : null}
+            </MenuItem>
+            <MenuItem key="nav5" onClick={() => handleClick(5)}>
+              Data Elements{selectedItemdd.item === 5 ? <Glyphicon glyph="ok" className="pull-right" /> : null}
+            </MenuItem>
+          </DropdownButton>&nbsp;
 
-    }
+          <Dropdown id="dropdown-custom-menu">
+            <CustomToggle>
+              {selectedGroup} <span className="caret" />
+            </CustomToggle>
 
-    render() {
-    
-        return (
-            <div className="tabpanebody">
-                <div className="container">
-                    <hr/>
-                    <Row>
-                        <label style={{marginLeft: 10}}>Filter by Groups</label>&nbsp;
-                        <DropdownButton id="input-dropdown-addon" title={this.state.selectedItemdd.name}>
+            <CustomMenu>
+              {data.map((dynamicData, key) => (
+                <MenuItem
+                  onClick={() => setSelectedGroup(dynamicData.name, dynamicData.id)}
+                  key={key}
+                >
+                  {dynamicData.name}
+                </MenuItem>
+              ))}
+            </CustomMenu>
+          </Dropdown>&nbsp;
 
-                            <MenuItem key="nav2" onClick={this.handleClick.bind(this, 2)}>
-                            DataSets{this.state.selectedItemdd.item === 2 ? <Glyphicon glyph="ok" bsStyle={"primary"}
-                                                                                       className={"pull-right"}/> : null}</MenuItem>
-                            <MenuItem key="nav3"
-                                      onClick={this.handleClick.bind(this, 3)}>Indicators{this.state.selectedItemdd.item === 3 ?
-                                <Glyphicon glyph="ok" bsStyle={"primary"} className={"pull-right"}/> : null}</MenuItem>
-                            <MenuItem key="nav4"
-                                      onClick={this.handleClick.bind(this, 4)}>Programs{this.state.selectedItemdd.item === 4 ?
-                                <Glyphicon glyph="ok" bsStyle={"primary"} className={"pull-right"}/> : null}</MenuItem>
-                            <MenuItem key="nav5" onClick={this.handleClick.bind(this, 5)}>Data
-                                Elements{this.state.selectedItemdd.item === 5 ?
-                                    <Glyphicon glyph="ok" bsStyle={"primary"}
-                                               className={"pull-right"}/> : null}</MenuItem>
-                        </DropdownButton>&nbsp;
-
-                        <Dropdown id="dropdown-custom-menu">
-                            <CustomToggle bsRole="toggle">{this.state.selectedGroup} <span
-                                className={"caret"}/></CustomToggle>
-                              
-                            <CustomMenu bsRole="menu">
-                                {this.state.data.map((dynamicData, key) =>
-                                    <MenuItem onClick={this.handleGroup.bind(this, dynamicData.name, dynamicData.id)}
-                                              key={key}> {dynamicData.name}</MenuItem>
-                                )}
-                            </CustomMenu>
-                        </Dropdown>&nbsp;
-                        {this.state.viewTabs && this.state.selectedGroup !== "Filter" ?
-                            <Button onClick={this.showAllButton}>View All</Button> : null}&nbsp;
-                        {!this.state.viewTabs ? <Button bsStyle="danger" onClick={this.removeAllButton}><Glyphicon
-                            glyph={"repeat"}/></Button> : null}
-                    </Row>
-                    <hr/>
-                    {this.state.viewTabs ? <Tab.Container id="tabs-with-dropdown" defaultActiveKey="first">
-                        <Row className="clearfix">
-                            <Col sm={12}>
-                                <Nav bsStyle="tabs">
-                                    <NavItem eventKey="first" onClick={this.dispUrl.bind(this,'dataSets')}>Datasets</NavItem>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
-                                    <NavItem eventKey="second" onClick={this.dispUrl.bind(this,'indicators')}>Indicators</NavItem>
-                                    <NavItem eventKey="third" onClick={this.dispUrl.bind(this,'programs')}>Programs</NavItem>
-                                    <NavItem eventKey="fourth" onClick={this.dispUrl.bind(this,'dataElements')}>Data Elements</NavItem>
-                                </Nav>
-                            </Col>
-                            <br/>
-                            {/* ------------------------------------------ */}
-                            <Col xs={3} md={3}>
-                                <Dropdown id="dropdown-custom-1">
-                                    <Dropdown.Toggle>
-                                        <Glyphicon glyph="print"/>&nbsp;Export All
-                                    </Dropdown.Toggle>
-                                    <Dropdown.Menu className="super-colors">
-                                        <MenuItem eventKey="1" href={this.state.current_url+".csv"}>CSV</MenuItem>
-                                      
-                                        <MenuItem eventKey="2" href={this.state.current_url+".xlsx"}>Excel</MenuItem>
-                                        <MenuItem eventKey="3" href={this.state.current_url+".pdf"}>PDF</MenuItem>
-                                    </Dropdown.Menu>
-                                </Dropdown>
-                            </Col>
-                           
-                            {/* -------------------------------------------------- */}
-                            <Col sm={12}>
-                                <div className={"container content"}>
-                                    <Tab.Content animation>
-                                        <Tab.Pane eventKey="first"><ButtonGroupNav item={"datasets"}/></Tab.Pane>
-                                        <Tab.Pane eventKey="second"><ButtonGroupNav item={"indicators"}/></Tab.Pane>
-                                        <Tab.Pane eventKey="third"><ButtonGroupNav item={"programs"}/></Tab.Pane>
-                                        <Tab.Pane eventKey="fourth"><ButtonGroupNav item={"dataelements"}/></Tab.Pane>
-                                    </Tab.Content>
-                                </div>
-                            </Col>
-                        </Row>
-                    </Tab.Container> : null}
-                    <div id={"displayHereAfter"}/>
-                </div>
-            </div>
-
-        );
-    }
-}
+          {viewTabs && selectedGroup !== 'Filter' ? (
+            <Button onClick={showAllButton}>View All</Button>
+          ) : null}&nbsp;
+          {!viewTabs ? (
+            <Button bsStyle="danger" onClick={removeAllButton}>
+              <Glyphicon glyph="repeat" />
+            </Button>
+          ) : null}
+        </Row>
+        <hr />
+        {viewTabs ? (
+          <Tab.Container id="tabs-with-dropdown" defaultActiveKey="first">
+            <Row className="clearfix">
+              <Col sm={12}>
+                <Nav bsStyle="tabs">
+                  <NavItem eventKey="first" onClick={() => dispUrl('dataSets')}>Datasets</NavItem>
+                  <NavItem eventKey="second" onClick={() => dispUrl('indicators')}>Indicators</NavItem>
+                  <NavItem eventKey="third" onClick={() => dispUrl('programs')}>Programs</NavItem>
+                  <NavItem eventKey="fourth" onClick={() => dispUrl('dataElements')}>Data Elements</NavItem>
+                </Nav>
+              </Col>
+              <Col sm={12}>
+                <Tab.Content animation>
+                  <Tab.Pane eventKey="first">
+                    <ButtonGroupNav item="datasets" />
+                  </Tab.Pane>
+                  <Tab.Pane eventKey="second">
+                    <ButtonGroupNav item="indicators" />
+                  </Tab.Pane>
+                  <Tab.Pane eventKey="third">
+                    <ButtonGroupNav item="programs" />
+                  </Tab.Pane>
+                  <Tab.Pane eventKey="fourth">
+                    <ButtonGroupNav item="dataelements" />
+                  </Tab.Pane>
+                </Tab.Content>
+              </Col>
+            </Row>
+          </Tab.Container>
+        ) : null}
+      </div>
+    </div>
+  );
+};
 
 export default Tabpane;

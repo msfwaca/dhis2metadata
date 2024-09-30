@@ -74,7 +74,7 @@ class LetterResults extends Component {
     }
 
     handleShow(id, description, name, aggregationType, domainType, valueType, shortName) {
-         /*console.log(id+" desc "+description+" name "+name+" agg: "+aggregationType+" domain: "+domainType+" value:"+valueType+" short: "+shortName);*/
+         console.log(id+" desc "+description+" name "+name+" agg: "+aggregationType+" domain: "+domainType+" value:"+valueType+" short: "+shortName);
         this.setState({
             isLoading: true,
             show: true,
@@ -158,7 +158,7 @@ class LetterResults extends Component {
 
                 });
 
-                headerPlace = "programs/";
+                headerPlace = "/programs/";
                 break;
             case "ds":
                 placeholder = JSON.stringify({
@@ -166,7 +166,7 @@ class LetterResults extends Component {
                     description: this.state.description,
                     periodType: this.state.periodType
                 });
-                headerPlace = "dataSets/";
+                headerPlace = "/dataSets/";
                 break;
             case "indi":
                 placeholder = JSON.stringify({
@@ -177,7 +177,7 @@ class LetterResults extends Component {
                     denominator: this.state.denominator,
                     shortName: this.state.shortname
                 });
-                headerPlace = "indicators/";
+                headerPlace = "/indicators/";
                 break;
             default:
                 placeholder = undefined;

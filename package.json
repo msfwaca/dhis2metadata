@@ -6,10 +6,10 @@
   "dependencies": {
     "axios": "^0.18.0",
     "history": "^1.13.1",
-    "react": "^16.5.2",
+    "react": "^16.8.0",
     "react-bootstrap": "^0.32.4",
     "react-detect-offline": "^2.1.2",
-    "react-dom": "^16.5.2",
+    "react-dom": "^16.8.0",
     "react-js-pagination": "^3.0.2",
     "react-overlays": "^0.8.3",
     "react-redux": "^5.0.7",
